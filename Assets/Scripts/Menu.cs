@@ -27,4 +27,10 @@ public class Menu : MonoBehaviour
         int bestScore = PlayerPrefs.GetInt("BestScore", 0);
         bestScoreText.text = "Best Score: " + bestScore;
     }
+
+    public void SetControlType(bool useGyro)
+    {
+        PlayerPrefs.SetInt("UseGyroControl", useGyro ? 1 : 0);
+        PlayerPrefs.Save();
+    }
 }

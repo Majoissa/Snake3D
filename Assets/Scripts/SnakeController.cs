@@ -18,6 +18,8 @@ public class SnakeController : MonoBehaviour
     public StickController MoveStick;
     public AudioSource audioSource;
     public AudioClip eatFood;
+    private Gyroscope gyro;
+    private bool gyroSupported;
     void Start()
     {
 
@@ -28,6 +30,19 @@ public class SnakeController : MonoBehaviour
         GrowSnake();
         GrowSnake();
         GrowSnake();
+
+        gyroSupported = SystemInfo.supportsGyroscope;
+        bool useGyro = PlayerPrefs.GetInt("UseGyroControl", 0) == 1;
+        if (useGyro && SystemInfo.supportsGyroscope)
+        {
+            gyroSupported = true;
+            gyro = Input.gyro;
+            gyro.enabled = true;
+        }
+        else
+        {
+            gyroSupported = false;
+        }
 
     }
     void Awake()
@@ -46,25 +61,28 @@ public class SnakeController : MonoBehaviour
     }
     void Update()
     {
-        // Get Input for axis
-        float h = Mathf.Abs(MoveStickPos.x) > Mathf.Abs(Input.GetAxis("Horizontal")) ? MoveStickPos.x : Input.GetAxis("Horizontal");
-        float v = Mathf.Abs(MoveStickPos.y) > Mathf.Abs(Input.GetAxis("Vertical")) ? MoveStickPos.y : Input.GetAxis("Vertical");
+        if (gyroSupported)
+        {
+            // Control de la serpiente con giroscopio
+            float gyroH = gyro.rotationRate.y; // Usa rotationRate o attitude, según tus necesidades
+                                               // Utiliza gyroH para controlar la serpiente
+            transform.Rotate(Vector3.up * gyroH * steerSpeed * Time.deltaTime);
+        }
+        else
+        {
+            // Control de la serpiente con joystick o teclado
+            float h = Mathf.Abs(MoveStickPos.x) > Mathf.Abs(Input.GetAxis("Horizontal")) ? MoveStickPos.x : Input.GetAxis("Horizontal");
+            // Steer
+            transform.Rotate(Vector3.up * h * steerSpeed * Time.deltaTime);
+        }
 
-        //move forward
+        // Mueve hacia adelante
         transform.position += transform.forward * moveSpeed * Time.deltaTime;
 
-        //steer
-        transform.Rotate(Vector3.up * h * steerSpeed * Time.deltaTime);
-
-        // Update body parts
+        // Actualiza partes del cuerpo
         UpdateBodyParts();
-
-        // Grow snake on space press (for debugging purposes, you might want to remove this later)
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GrowSnake();
-        }
     }
+
 
     private void UpdateBodyParts()
     {
